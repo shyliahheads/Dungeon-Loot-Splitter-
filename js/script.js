@@ -1,3 +1,71 @@
+function saveState() {
+
+    // Construct a single object representing application state
+    const state = {
+        loot: loot,
+        partySize: partySize
+    };
+
+    // Convert object to string and store it
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+}
+
+function restoreState() {
+
+    const saved = localStorage.getItem(STORAGE_KEY);
+
+    if (!saved) return;
+
+    try {
+
+        const parsed = JSON.parse(saved);
+
+        // Ensure parsed value is an object
+        if (typeof parsed !== "object") return;
+
+        // Validate party size
+        if (Number.isInteger(parsed.partySize) && parsed.partySize >= 1) {
+            partySize = parsed.partySize;
+        }
+
+        // Validate loot array
+        if (Array.isArray(parsed.loot)) {
+
+            parsed.loot.forEach(item => {
+
+                if (
+                    item.name &&
+                    typeof item.name === "string" &&
+                    item.name.trim() !== "" &&
+                    typeof item.value === "number" &&
+                    item.value >= 0 &&
+                    typeof item.quantity === "number" &&
+                    item.quantity >= 1
+                ) {
+
+                    loot.push({
+                        name: item.name,
+                        value: item.value,
+                        quantity: item.quantity
+                    });
+
+                }
+
+            });
+
+        }
+
+    } catch (error) {
+
+        console.log("Invalid saved data. Using default state.");
+
+    }
+
+}
+
+
+
 // Persistent loot array
 let lootArray = [];
 
@@ -98,3 +166,15 @@ function splitLoot() {
     finalTotalDisplay.textContent = total.toFixed(2);
     perMemberDisplay.textContent = perMember.toFixed(2);
 }
+
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    restoreState();
+
+    // restore party size into input field
+    document.getElementById("partySize").value = partySize;
+
+    updateUI();
+
+});
